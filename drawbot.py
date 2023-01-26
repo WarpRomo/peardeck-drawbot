@@ -14,10 +14,10 @@ palette_last = [1810,780]; #screen x,y location of the last palette color,
 draw_speed = 0.0025;
 
 #how much to scale image by
-image_scale = 8;
+image_scale = 1;
 
 #gap between each pixel
-image_gap = 1;
+image_gap = 2;
 
 #x,y position of top left corner of the image
 image_pos = [500,200];
