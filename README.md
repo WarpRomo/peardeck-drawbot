@@ -1,5 +1,5 @@
 # peardeck-drawbot
 <img src="mariodrawing.gif"></img>
-^Play this video to see it in action
+<p>^Play this video to see it in action</p>
 <img src="pixelart2.png"></img>
-^This took 1:23 to draw
+<p>^This took 1:23 to draw</p>
