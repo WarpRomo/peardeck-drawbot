@@ -3,7 +3,7 @@ import time, ctypes, keyboard;
 
 #press the safe_key while drawing to make the program stop
 safe_key = 'q';
-image_name = "pixelart.png";
+image_name = "pixelart2.png";
 
 #make sure with inspect element that all palette colors are on the screen, so the bot can click on them if needed
 #0,0 is top left corner
