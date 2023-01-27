@@ -139,8 +139,6 @@ def findpath(x,y,x2,y2,colors):
 def checknogo(colors,explored,threshold,x,y,skiparray):
 
     if colors[y][x] == -1 or skiparray[y][x] != 0:
-        if skiparray[y][x] == -1:
-            print("yess");
         return;
 
     positions = [[x,y]];
