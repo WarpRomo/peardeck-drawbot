@@ -8,11 +8,11 @@ image_name = "pixelart.png";
 
 #make sure with inspect element that all palette colors are on the screen, so the bot can click on them if needed
 #0,0 is top left corner
-palette_first = [200,780]; #screen x,y location of the first palette color
-palette_last = [1810,780]; #screen x,y location of the last palette color,
+palette_first = [130,485]; #screen x,y location of the first palette color
+palette_last = [1200,485]; #screen x,y location of the last palette color,
 
 #if drawing is too slow, decrease it, if it's too fast and messing up, increase it
-draw_speed = 0.0007;
+draw_speed = 0.005;
 
 #how much to scale image by
 image_scale = 1;
@@ -21,10 +21,11 @@ image_scale = 1;
 image_gap = 1;
 
 #x,y position of top left corner of the image
-image_pos = [500,200];
+image_pos = [345,143];
 
 #skip the pixel if it's just like a single color by itself
-skip_threshold = 40;
+skip_threshold = 25;
+skip_search = True;
 
 def sleep(duration, get_now=time.perf_counter):
     now = get_now();
@@ -136,7 +137,7 @@ def findpath(x,y,x2,y2,colors):
 
 
 
-def checknogo(colors,explored,threshold,x,y,skiparray):
+def checknogo(colors,explored,threshold,x,y,skiparray,thresholdsearch):
 
     if colors[y][x] == -1 or skiparray[y][x] != 0:
         return;
@@ -148,6 +149,8 @@ def checknogo(colors,explored,threshold,x,y,skiparray):
 
     choices = [[0,1], [-1,0], [0,-1], [1,0], [1,1], [-1,1], [-1,-1], [1,-1]];
 
+    alternatecolor = -1;
+
     while index < len(positions):
 
         me = positions[index];
@@ -157,10 +160,14 @@ def checknogo(colors,explored,threshold,x,y,skiparray):
             nx = me[0] + choices[j][0];
             ny = me[1] + choices[j][1];
 
-            if not (nx < 0 or nx >= len(colors[0])) and not (ny < 0 or ny >= len(colors)) and exploredclone[ny][nx] == 0 and colors[ny][nx] == colors[me[1]][me[0]]:
+            if not (nx < 0 or nx >= len(colors[0])) and not (ny < 0 or ny >= len(colors)):
 
-                exploredclone[ny][nx] = 1;
-                positions.append([nx,ny]);
+                if alternatecolor == -1 and colors[ny][nx] != -1 and colors[ny][nx] != colors[me[1]][me[0]]:
+                    alternatecolor = colors[ny][nx]
+
+                if exploredclone[ny][nx] == 0 and colors[ny][nx] == colors[me[1]][me[0]]:
+                    exploredclone[ny][nx] = 1;
+                    positions.append([nx,ny]);
 
         index += 1;
 
@@ -172,9 +179,19 @@ def checknogo(colors,explored,threshold,x,y,skiparray):
         me = positions[i];
         skiparray[me[1]][me[0]] = num;
 
-def floodeverything(colors,explored,colorpositions,s,p,dx,dy,threshold):
+        if thresholdsearch and num == -1:
+            colors[me[1]][me[0]] = alternatecolor;
+
+def floodeverything(colors,explored,colorpositions,s,p,dx,dy,threshold,thresholdsearch):
 
     skiparray = [ [0]*len(colors[0]) for _ in range(len(colors)) ];
+
+
+    for y in range(0, len(colors)):
+        for x in range(0, len(colors[0])):
+            checknogo(colors,explored,threshold,x,y,skiparray,thresholdsearch);
+
+
 
     for y in range(0, len(colors)):
         for x in range(0, len(colors[0])):
@@ -182,9 +199,7 @@ def floodeverything(colors,explored,colorpositions,s,p,dx,dy,threshold):
             if keyboard.is_pressed(safe_key):
                 return;
 
-            checknogo(colors,explored,threshold,x,y,skiparray);
-
-            if colors[y][x] == -1 or skiparray[y][x] == -1: continue;
+            if colors[y][x] == -1: continue;
             if explored[y][x] == 0:
 
                 color = list[y][x];
@@ -253,4 +268,4 @@ for y in range(0,im.size[1] * image_scale):
         list[y][x] = get_closest(pix_val[index], values);
 
 
-floodeverything(list, explored, colorpositions, draw_speed, image_gap, image_pos[0], image_pos[1], skip_threshold)
+floodeverything(list, explored, colorpositions, draw_speed, image_gap, image_pos[0], image_pos[1], skip_threshold, skip_search)
