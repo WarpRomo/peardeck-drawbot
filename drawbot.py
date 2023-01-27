@@ -1,9 +1,10 @@
 from PIL import Image;
 import time, ctypes, keyboard;
+import copy;
 
 #press the safe_key while drawing to make the program stop
 safe_key = 'q';
-image_name = "pixelart2.png";
+image_name = "pixelart.png";
 
 #make sure with inspect element that all palette colors are on the screen, so the bot can click on them if needed
 #0,0 is top left corner
@@ -17,7 +18,7 @@ draw_speed = 0.0025;
 image_scale = 1;
 
 #gap between each pixel
-image_gap = 2;
+image_gap = 1;
 
 #x,y position of top left corner of the image
 image_pos = [500,200];
@@ -53,11 +54,15 @@ def floodfill(x,y,explored,colors,s,p,dx,dy):
     explored[y][x] = 1;
     breakout = 0;
 
+    mousecurrent = [x,y];
+
     while len(floodarray) > 0:
 
         me = floodarray[len(floodarray)-1];
-        moveto(me[0],me[1],p,dx,dy);
-        sleep(s);
+
+        if me[2] == len(paths)-1:
+            floodarray.pop();
+            continue;
 
         if keyboard.is_pressed(safe_key):
             return;
@@ -68,13 +73,64 @@ def floodfill(x,y,explored,colors,s,p,dx,dy):
             ny = me[1] + paths[i][1];
 
             if not (nx < 0 or nx >= len(colors[0])) and not (ny < 0 or ny >= len(colors)) and explored[ny][nx] == 0 and colors[ny][nx] == colors[me[1]][me[0]]:
-                floodarray.append([nx,ny,0]);
                 explored[ny][nx] = 1;
+                floodarray.append([nx,ny,0]);
+
+                movebetween(mousecurrent[0], mousecurrent[1], nx, ny, colors, s, p, dx, dy);
+
+                mousecurrent = [nx,ny];
+
                 me[2] = i;
                 break;
 
             if i == len(paths)-1:
                 floodarray.pop();
+
+def movebetween(x,y,x2,y2,colors,s,p,dx,dy):
+    movement = findpath(x,y,x2,y2,colors);
+
+    for i in range(1, len(movement)):
+        moveto(movement[i][0], movement[i][1],p,dx,dy);
+        sleep(s);
+
+def findpath(x,y,x2,y2,colors):
+
+    paths = [ [[x,y]] ];
+    newpaths = [];
+    choices = [[0,1], [-1,0], [0,-1], [1,0], [1,1], [-1,1], [-1,-1], [1,-1]];
+
+    if abs(x2 - x) <= 1 and abs(y2 - y) <= 1:
+        return [[x,y],[x2,y2]];
+
+    explored = [ [0]*len(colors[0]) for _ in range(len(colors)) ];
+
+    while len(paths) > 0:
+
+        for i in range(0, len(paths)):
+            me = paths[i][len(paths[i])-1];
+
+            for j in range(0, len(choices)):
+
+                nx = me[0] + choices[j][0];
+                ny = me[1] + choices[j][1];
+
+                if nx == x2 and ny == y2:
+                    paths[i].append([nx,ny]);
+                    return paths[i];
+
+                if not (nx < 0 or nx >= len(colors[0])) and not (ny < 0 or ny >= len(colors)) and explored[ny][nx] == 0 and colors[ny][nx] == colors[me[1]][me[0]]:
+
+                    explored[ny][nx] = 1;
+
+                    copyarray = paths[i].copy();
+                    copyarray.append([nx,ny]);
+                    newpaths.append(copyarray);
+
+        paths = newpaths;
+        newpaths = [];
+
+    return None;
+
 
 def floodeverything(colors,explored,colorpositions,s,p,dx,dy):
 
