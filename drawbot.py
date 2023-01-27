@@ -12,7 +12,7 @@ palette_first = [200,780]; #screen x,y location of the first palette color
 palette_last = [1810,780]; #screen x,y location of the last palette color,
 
 #if drawing is too slow, decrease it, if it's too fast and messing up, increase it
-draw_speed = 0.0025;
+draw_speed = 0.0007;
 
 #how much to scale image by
 image_scale = 1;
@@ -22,6 +22,9 @@ image_gap = 1;
 
 #x,y position of top left corner of the image
 image_pos = [500,200];
+
+#skip the pixel if it's just like a single color by itself
+skip_threshold = 40;
 
 def sleep(duration, get_now=time.perf_counter):
     now = get_now();
@@ -132,7 +135,48 @@ def findpath(x,y,x2,y2,colors):
     return None;
 
 
-def floodeverything(colors,explored,colorpositions,s,p,dx,dy):
+
+def checknogo(colors,explored,threshold,x,y,skiparray):
+
+    if colors[y][x] == -1 or skiparray[y][x] != 0:
+        if skiparray[y][x] == -1:
+            print("yess");
+        return;
+
+    positions = [[x,y]];
+    exploredclone = [ [0]*len(colors[0]) for _ in range(len(colors)) ];
+
+    index = 0;
+
+    choices = [[0,1], [-1,0], [0,-1], [1,0], [1,1], [-1,1], [-1,-1], [1,-1]];
+
+    while index < len(positions):
+
+        me = positions[index];
+
+        for j in range(0, len(choices)):
+
+            nx = me[0] + choices[j][0];
+            ny = me[1] + choices[j][1];
+
+            if not (nx < 0 or nx >= len(colors[0])) and not (ny < 0 or ny >= len(colors)) and exploredclone[ny][nx] == 0 and colors[ny][nx] == colors[me[1]][me[0]]:
+
+                exploredclone[ny][nx] = 1;
+                positions.append([nx,ny]);
+
+        index += 1;
+
+    num = 1;
+
+    if index < threshold: num = -1;
+
+    for i in range(0, len(positions)):
+        me = positions[i];
+        skiparray[me[1]][me[0]] = num;
+
+def floodeverything(colors,explored,colorpositions,s,p,dx,dy,threshold):
+
+    skiparray = [ [0]*len(colors[0]) for _ in range(len(colors)) ];
 
     for y in range(0, len(colors)):
         for x in range(0, len(colors[0])):
@@ -140,7 +184,9 @@ def floodeverything(colors,explored,colorpositions,s,p,dx,dy):
             if keyboard.is_pressed(safe_key):
                 return;
 
-            if colors[y][x] == -1: continue;
+            checknogo(colors,explored,threshold,x,y,skiparray);
+
+            if colors[y][x] == -1 or skiparray[y][x] == -1: continue;
             if explored[y][x] == 0:
 
                 color = list[y][x];
@@ -209,4 +255,4 @@ for y in range(0,im.size[1] * image_scale):
         list[y][x] = get_closest(pix_val[index], values);
 
 
-floodeverything(list, explored, colorpositions, draw_speed, image_gap, image_pos[0], image_pos[1])
+floodeverything(list, explored, colorpositions, draw_speed, image_gap, image_pos[0], image_pos[1], skip_threshold)
