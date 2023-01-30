@@ -1,0 +1,32 @@
+{
+	"manifest_version": 3,
+	"name": "Peardeck Drawing Bot",
+	"description": "Drag and drop and image an onto the peardeck canvas, then left-click, and it will be drawn.",
+	"version": "1.0",
+	"icons": {
+		"16": "/images/16.png",
+		"48": "/images/48.png",
+		"128": "/images/128.png"
+	},
+	"action": {
+
+		"default_icon": {
+			"16": "/images/16.png",
+			"48": "/images/48.png",
+			"128": "/images/128.png"
+		}
+
+	},
+	"permissions": [
+        "activeTab",
+        "scripting",
+        "tabs"
+    ],
+	"host_permissions": [
+        "https://app.peardeck.com/student/*"
+    ],
+	"background": {
+        "service_worker": "./serviceworker.js"
+    }
+
+}
