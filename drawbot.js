@@ -4,8 +4,10 @@ let draw_speed = 0.00;
 
 let image_pos = [150,150];
 
-let skip_threshold = 25;
+let skip_threshold = 5;
 let skip_search = true;
+
+console.log("Peardeck drawing-bot has been loaded!");
 
 function createMouseEvent(name, coords) {
     return new PointerEvent(name, {
@@ -81,7 +83,7 @@ function floodfill(x,y,explored,colors,s,p,dx,dy){
 
             if(iterations == 100){
               setTimeout(process, 10)
-              drawintervaltimer[2].innerHTML = floodedpixels + "/" + totalpixels;
+              drawintervaltimer[2].innerHTML = "Currently Drawing " + floodedpixels + "/" + totalpixels + "<br>Move mouse to cancel";
               return;
             }
 
@@ -265,15 +267,49 @@ async function floodeverything(colors,explored,s,p,dx,dy,threshold,thresholdsear
       skiparray.push(new Array(colors[0].length).fill(0));
     }
 
+    console.log("calculating");
 
-    for(var y = 0; y < colors.length; y++){
-      for(var x = 0; x < colors[0].length; x++){
-        checknogo(colors,explored,threshold,x,y,skiparray,thresholdsearch);
+    await calculate();
 
-        if(colors[y][x] != -1) totalpixels++;
+    console.log("done calculating");
 
-      }
+    async function calculate(){
+
+      return new Promise((resolve) => {
+        let startx = 0;
+        let starty = 0;
+        iterate();
+        function iterate(){
+
+          for(var y = starty; y < colors.length; y++){
+            for(var x = y == starty ? startx : 0; x < colors[0].length; x++){
+
+              if(!currentlydrawing) return resolve();
+
+              drawintervaltimer[2].innerHTML = "Calculating " + (y * colors[0].length + x) + "/" + (colors.length * colors[0].length) + "<br>Move mouse to cancel"
+
+              checknogo(colors,explored,threshold,x,y,skiparray,thresholdsearch);
+              if(colors[y][x] != -1) totalpixels++;
+
+              if((y * colors[0].length + x) % 100 == 0){
+                startx = x + 1;
+                starty = y;
+                setTimeout( iterate, 1 );
+                return;
+              }
+
+            }
+          }
+          resolve();
+        }
+
+      })
+
+
     }
+
+    if(!currentlydrawing) return;
+
 
     let floodareas = [];
 
@@ -425,12 +461,10 @@ function drawinterval(){
   drawintervaltimer[2].innerHTML = "Starting in " + Math.ceil(timeleft) + " <br>To stop drawing, simply move your cursor while the bot is drawing :D";
 
   if(timeleft < 0){
-    console.log("BOOOOM!");
     getPixelArray(theimage.src).then(data => {
       drawimage(data, draw_speed, 1, drawintervaltimer[4], 1, 25, true)
       theimage.remove();
       theimage = null;
-      drawintervaltimer[2].innerHTML = "Currently Drawing!";
       clearInterval(drawintervaltimer[1]);
       drawintervaltimer[0] = null;
     });
@@ -519,7 +553,7 @@ window.addEventListener("mousedown",function(e){
     imagetext.style.backgroundColor = "red";
 
     let interval = setInterval(drawinterval, 100);
-    drawintervaltimer = [6000, interval, imagetext, new Date().getTime(), [e.clientX, e.clientY]];
+    drawintervaltimer = [5000, interval, imagetext, new Date().getTime(), [e.clientX, e.clientY]];
 
     theimage.parentElement.appendChild(imagetext);
 
